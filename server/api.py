@@ -1,14 +1,15 @@
-from flask import Flask, request, Blueprint, abort
-import jwt
+#from flask import Flask, request, Blueprint, abort
+from fastapi import FastAPI, HTTPException, Body
+import jwt, uvicorn
+from typing import Annotated
 
 secret = 'abcdef'
-api = Blueprint('api', __name__,)
+api = FastAPI()
 
 results:dict[str, list[int]] = {}
 
 @api.post('/register_device/')
-def add_device():
-    location = request.json['location']
+def add_device(location:str=''):
     results.update({location: []})
     payload = {'device':len(results), 'device_location':location}
     token = jwt.encode(payload, key=secret)
@@ -16,12 +17,11 @@ def add_device():
     return {'token':token}
 
 @api.post('/submit_result/')
-def submit_result():
-    result = request.json['result']
-    payload = jwt.decode(request.json['token'], secret, algorithms=['HS256', ])
+def submit_result(result:Annotated[int, Body(embed=True)], token:Annotated[str, Body(embed=True)]):
+    payload = jwt.decode(token, secret, algorithms=['HS256', ])
     location = payload['device_location']
     if not location in results:
-        abort(404, 'The specified device was not found')
+        raise HTTPException(status_code=404, detail='The specified device was not found')
     results[location].append(int(result))
     print(f'device at {location} reported {result} devices')
     print(results, filteredResults())
@@ -37,3 +37,6 @@ def resultsFilter(data:list[int], filterConstant:float=0.2):
 
 def filteredResults():
     return {x:resultsFilter(results[x]) for x in results}
+
+if __name__ == '__main__':
+    uvicorn.run(api)
