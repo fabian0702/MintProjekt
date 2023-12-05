@@ -6,12 +6,17 @@ from typing import Annotated
 secret = 'abcdef'
 api = FastAPI()
 
-results:dict[str, list[int]] = {}
+results:dict[str, list[list[str]]] = {}
+pastResults:dict[str, list[str]] = {}
 
 @api.post('/register_device/')
 def add_device(location:str=''):
-    results.update({location: []})
-    payload = {'device':len(results), 'device_location':location}
+    if not location in results:
+        results.update({location: [[]]})
+        pastResults.update({location:[]})
+    else:
+        results[location].append([])
+    payload = {'device':len(results[location])-1, 'device_location':location}
     token = jwt.encode(payload, key=secret)
     print(f'generated token with payload: {payload}')
     return {'token':token}
@@ -20,11 +25,13 @@ def add_device(location:str=''):
 def submit_result(result:Annotated[int, Body(embed=True)], token:Annotated[str, Body(embed=True)]):
     payload = jwt.decode(token, secret, algorithms=['HS256', ])
     location = payload['device_location']
-    if not location in results:
+    deviceNumber = int(payload['device'])
+    if not location in results or not len(results[location])>=deviceNumber:
         raise HTTPException(status_code=404, detail='The specified device was not found')
-    results[location].append(int(result))
-    print(f'device at {location} reported {result} devices')
-    print(results, filteredResults())
+    results[location][deviceNumber] = result
+    print(f'device at {location} reported {len(result)} devices')
+    if deviceNumber == 0:
+        print(results, filteredResults())
     return ''
 
 def resultsFilter(data:list[int], filterConstant:float=0.2):
@@ -36,7 +43,13 @@ def resultsFilter(data:list[int], filterConstant:float=0.2):
     return filterValue
 
 def filteredResults():
-    return {x:resultsFilter(results[x]) for x in results}
+    for location in results:
+        processedResult = set(results[location][0])
+        for s in results[location][1:]:
+            processedResult = processedResult.intersection(set(s))
+        pastResults[location].append(len(processedResult))
+    
+    return {x:resultsFilter() for x in pastResults}
 
 if __name__ == '__main__':
     uvicorn.run(api)

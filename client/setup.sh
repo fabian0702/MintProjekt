@@ -1,4 +1,5 @@
 cd ~
+apt install parallel
 #write out current crontab
 crontab -l > mycron
 #echo new cron into cron file
