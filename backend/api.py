@@ -1,11 +1,16 @@
 #from flask import Flask, request, Blueprint, abort
 from fastapi import FastAPI, HTTPException, Body
+from pydantic import BaseModel, Field
 import jwt, uvicorn
 from typing import Annotated
 
 secret = 'abcdef'
 api = FastAPI()
 
+class Result(BaseModel):
+    token: str
+    results: list[str]
+    
 results:dict[str, list[list[str]]] = {}
 pastResults:dict[str, list[str]] = {}
 
@@ -22,16 +27,17 @@ def add_device(location:str=''):
     return {'token':token}
 
 @api.post('/api/submit_result/')
-def submit_result(result:Annotated[int, Body(embed=True)], token:Annotated[str, Body(embed=True)]):
-    payload = jwt.decode(token, secret, algorithms=['HS256', ])
+def submit_result(result:Result):
+
+    payload = jwt.decode(result.token, secret, algorithms=['HS256', ])
     location = payload['device_location']
     deviceNumber = int(payload['device'])
     if not location in results or not len(results[location])>=deviceNumber:
         raise HTTPException(status_code=404, detail='The specified device was not found')
-    results[location][deviceNumber] = result
-    print(f'device at {location} reported {len(result)} devices')
+    results[location][deviceNumber] = result.results
+    print(f'device at {location} reported {len(result.results)} devices')
     if deviceNumber == 0:
-        print(results, filteredResults())
+        print(filteredResults())
     return ''
 
 @api.get('/api/list_devices/')
@@ -53,16 +59,16 @@ def resultsFilter(data:list[int], filterConstant:float=0.2):
         filterValue = (1-filterConstant)*filterValue + filterConstant * d
     return filterValue
 
-
-
 def filteredResults():
     for location in results:
         processedResult = set(results[location][0])
         for s in results[location][1:]:
+            if len(s) == 0:
+                continue
             processedResult = processedResult.intersection(set(s))
         pastResults[location].append(len(processedResult))
     
-    return {x:resultsFilter() for x in pastResults}
+    return {x:resultsFilter(pastResults[x]) for x in pastResults}
 
 if __name__ == '__main__':
-    uvicorn.run(api)
+    uvicorn.run(api, host='0.0.0.0')
