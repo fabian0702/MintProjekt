@@ -1,8 +1,7 @@
-#from flask import Flask, request, Blueprint, abort
-from fastapi import FastAPI, HTTPException, Body
-from pydantic import BaseModel, Field
-import jwt, uvicorn
-from typing import Annotated
+#!/usr/bin/python3
+from fastapi import FastAPI, HTTPException
+from pydantic import BaseModel
+import jwt
 
 secret = 'abcdef'
 api = FastAPI()
@@ -70,5 +69,5 @@ def filteredResults():
     
     return {x:resultsFilter(pastResults[x]) for x in pastResults}
 
-if __name__ == '__main__':
-    uvicorn.run(api, host='0.0.0.0')
+#if __name__ == '__main__':
+#    uvicorn.run(api, host='0.0.0.0')
