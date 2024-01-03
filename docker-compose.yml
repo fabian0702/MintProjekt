@@ -1,0 +1,64 @@
+version: "3.9"
+
+services:
+  mongodb:
+    image: mongo
+    container_name: mongodb
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: root
+      MONGO_INITDB_ROOT_PASSWORD: ${MONGO_ROOT_PASSWORD}
+    volumes:
+      - ./database/data:/data/db
+      - ./mongo-init.js:/docker-entrypoint-initdb.d/mongo-init.js
+    ports:
+      - 27017:27017
+    networks:
+      - mint
+
+  mongo-express:
+    restart: always
+    image: mongo-express
+    container_name: mongo-express
+    depends_on:
+      - mongodb
+    environment:
+      ME_CONFIG_MONGODB_ADMINUSERNAME: root
+      ME_CONFIG_MONGODB_ADMINPASSWORD: ${MONGO_ROOT_PASSWORD}
+      ME_CONFIG_MONGODB_URL: mongodb://root:${MONGO_ROOT_PASSWORD}@mongodb:27017/
+    ports:
+      - "8081:8081"
+    networks:
+      - mint
+  nginx:
+    build: 
+      context: ./proxy/
+      dockerfile: Dockerfile
+    depends_on:
+      - backend
+      - frontend
+    ports:
+      - 1337:443
+    networks:
+      - mint
+  frontend:
+    build: 
+      context: ./backend
+      dockerfile: Dockerfile
+    environment:
+      - MONGO_ROOT_PASSWORD=${MONGO_ROOT_PASSWORD}
+      - SECRET=${SECRET}
+    networks:
+      - mint
+  backend:
+    depends_on:
+      - mongodb
+    build: 
+      context: ./backend
+      dockerfile: Dockerfile
+    environment:
+      - MONGO_ROOT_PASSWORD=${MONGO_ROOT_PASSWORD}
+      - SECRET=${SECRET}
+    networks:
+      - mint
+networks:
+  mint:

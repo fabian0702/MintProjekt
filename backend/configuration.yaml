@@ -1,0 +1,12 @@
+locations:
+  mensa:
+    endpoints: 2
+    name: 'Mensa'
+    mappingcoeficients:
+      - 1.0
+      - 0.0
+  library:
+    endpoints: 1
+    name: 'Library'
+    mappingcoeficients:
+      - 1.0
