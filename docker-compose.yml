@@ -3,13 +3,11 @@ version: "3.9"
 services:
   mongodb:
     image: mongo
-    container_name: mongodb
     environment:
       MONGO_INITDB_ROOT_USERNAME: root
       MONGO_INITDB_ROOT_PASSWORD: ${MONGO_ROOT_PASSWORD}
     volumes:
       - ./database/data:/data/db
-      - ./mongo-init.js:/docker-entrypoint-initdb.d/mongo-init.js
     ports:
       - 27017:27017
     networks:
@@ -18,7 +16,6 @@ services:
   mongo-express:
     restart: always
     image: mongo-express
-    container_name: mongo-express
     depends_on:
       - mongodb
     environment:
@@ -41,12 +38,8 @@ services:
     networks:
       - mint
   frontend:
-    build: 
-      context: ./backend
-      dockerfile: Dockerfile
-    environment:
-      - MONGO_ROOT_PASSWORD=${MONGO_ROOT_PASSWORD}
-      - SECRET=${SECRET}
+    image: zauberzeug/nicegui:latest
+
     networks:
       - mint
   backend:

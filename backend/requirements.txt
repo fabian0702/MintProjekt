@@ -4,3 +4,4 @@ pydantic==2.4.2
 PyJWT==2.8.0
 pyyaml
 pymongo
+scipy

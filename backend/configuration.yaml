@@ -1,12 +1,17 @@
-locations:
+# Smoothing filter constants (can be left as is in most instances)
+smoothing_constant: 0.2
+smoothing_value_count: 5
+
+locations:  # List of locations
   mensa:
     endpoints: 2
     name: 'Mensa'
     mappingcoeficients:
-      - 1.0
       - 0.0
+      - 1.0
   library:
     endpoints: 1
     name: 'Library'
     mappingcoeficients:
+      - 0.0
       - 1.0

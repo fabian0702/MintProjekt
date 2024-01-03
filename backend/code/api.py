@@ -3,6 +3,7 @@ from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel
 import jwt, yaml
 from datetime import datetime
+from scipy.interpolate import lagrange
 from os import environ
 from secrets import token_hex
 import db
@@ -14,10 +15,6 @@ print(secret)
 configurationFile=environ.get('CONFIGURATION_FILE', 'configuration.yaml')
 
 api = FastAPI()
-
-@api.get('/test/')
-def test():
-    return secret
 
 class Result(BaseModel):
     token: str
@@ -38,6 +35,14 @@ def add_device(location:str='', silent=False, correlationCoefficients:list[float
     if not silent:
         print(f'generated token with payload: {payload}')
     return {'token':token}
+
+@api.post('/adjust_coeficients/')
+def adjust_coeficients(location:str, timestamps:list[float], desiredResults:list[float]):
+    actualResults = [db.getDataByTimestamp(location, timestamp)[0] for timestamp in timestamps]
+    if None in actualResults:
+        raise HTTPException(404, f'Timestamp {actualResults.index(None)} has no been found in the database')
+    coefficients = lagrange(actualResults, desiredResults).coefficients
+    db.chageCoefficients(location, list(coefficients))
 
 @api.post('/submit_result/')
 def submit_result(result:Result):
