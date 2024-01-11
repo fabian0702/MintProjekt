@@ -3,6 +3,7 @@ version: "3.9"
 services:
   mongodb:
     image: mongo
+    container_name: mongodb
     environment:
       MONGO_INITDB_ROOT_USERNAME: root
       MONGO_INITDB_ROOT_PASSWORD: ${MONGO_ROOT_PASSWORD}
@@ -10,20 +11,6 @@ services:
       - ./database/data:/data/db
     ports:
       - 27017:27017
-    networks:
-      - mint
-
-  mongo-express:
-    restart: always
-    image: mongo-express
-    depends_on:
-      - mongodb
-    environment:
-      ME_CONFIG_MONGODB_ADMINUSERNAME: root
-      ME_CONFIG_MONGODB_ADMINPASSWORD: ${MONGO_ROOT_PASSWORD}
-      ME_CONFIG_MONGODB_URL: mongodb://root:${MONGO_ROOT_PASSWORD}@mongodb:27017/
-    ports:
-      - "8081:8081"
     networks:
       - mint
   nginx:
@@ -38,8 +25,12 @@ services:
     networks:
       - mint
   frontend:
-    image: zauberzeug/nicegui:latest
-
+    depends_on:
+      - mongodb
+      - backend
+    build: 
+      context: ./frontend
+      dockerfile: Dockerfile
     networks:
       - mint
   backend:
@@ -51,6 +42,33 @@ services:
     environment:
       - MONGO_ROOT_PASSWORD=${MONGO_ROOT_PASSWORD}
       - SECRET=${SECRET}
+    networks:
+      - mint
+  admin-panel:
+    image: zauberzeug/nicegui:latest
+    ports:
+      - 8080:8080
+    volumes:
+      - ./admin-panel/:/app # mounting local app directory
+    environment:
+      - PUID=1000 # change this to your user id
+      - PGID=1000 # change this to your group id
+      - STORAGE_SECRET="secret"
+      - SERVER_URL=http://backend:8000
+    networks:
+      - mint
+  mongo-express:
+    restart: always
+    image: mongo-express
+    container_name: mongo-express
+    depends_on:
+      - mongodb
+    environment:
+      ME_CONFIG_MONGODB_ADMINUSERNAME: root
+      ME_CONFIG_MONGODB_ADMINPASSWORD: ${MONGO_ROOT_PASSWORD}
+      ME_CONFIG_MONGODB_URL: mongodb://root:${MONGO_ROOT_PASSWORD}@mongodb:27017/
+    ports:
+      - "8081:8081"
     networks:
       - mint
 networks:

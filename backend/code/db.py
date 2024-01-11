@@ -18,10 +18,13 @@ def getDataByTimestamp(location:str, timestamp:float) -> int:
     return data[0] if len(data) else None
 
 def chageCoefficients(location:str, correlationCoefficients:list[float]):
-    database['locations'].update_one({'location':location}, {'location':location, 'correlationCoefficients':correlationCoefficients})
+    return database['locations'].update_one({'location':location}, {'location':location, 'correlationCoefficients':correlationCoefficients})
 
 def addLocation(location:str, correlationCoefficients:list[float]):
     return database['locations'].insert_one({'location':location, 'correlationCoefficients':correlationCoefficients})
+
+def removeLocation(location:str):
+    return database['locations'].delete_one({'location':location})
 
 def getLocation(location:str) -> list:
     results = list(database['locations'].find({'location':location}, limit=1))
