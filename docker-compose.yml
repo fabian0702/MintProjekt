@@ -11,12 +11,14 @@ services:
       - ./database/data:/data/db
     ports:
       - 27017:27017
+    restart: on-failure
     networks:
       - mint
   nginx:
     build: 
       context: ./proxy/
       dockerfile: Dockerfile
+    restart: on-failure
     depends_on:
       - backend
       - frontend
@@ -31,6 +33,7 @@ services:
     build: 
       context: ./frontend
       dockerfile: Dockerfile
+    restart: on-failure
     networks:
       - mint
   backend:
@@ -44,10 +47,12 @@ services:
       - SECRET=${SECRET}
     networks:
       - mint
+    restart: on-failure
   admin-panel:
     image: zauberzeug/nicegui:latest
     ports:
       - 8080:8080
+      - 8082:8082
     volumes:
       - ./admin-panel/:/app # mounting local app directory
     environment:
@@ -57,8 +62,11 @@ services:
       - SERVER_URL=http://backend:8000
     networks:
       - mint
+    depends_on:
+      - backend
+    restart: on-failure
   mongo-express:
-    restart: always
+    restart: on-failure
     image: mongo-express
     container_name: mongo-express
     depends_on:

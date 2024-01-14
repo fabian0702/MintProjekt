@@ -78,7 +78,7 @@ def remove_device(token:str):
 
 @api.post('/adjust_coeficients/')
 def adjust_coeficients(location:str, timestamps:list[float], desiredResults:list[float]):
-    actualResults = [db.getDataByTimestamp(location, timestamp)[0] for timestamp in timestamps]
+    actualResults = [db.getDataByTimestamp(location, timestamp) for timestamp in timestamps]
     if None in actualResults:
         raise HTTPException(404, f'Timestamp {actualResults.index(None)} has no been found in the database')
     coefficients = lagrange(actualResults, desiredResults).coefficients
