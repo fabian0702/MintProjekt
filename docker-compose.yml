@@ -15,7 +15,7 @@ services:
     networks:
       - mint
   nginx:
-    build: 
+    build:
       context: ./proxy/
       dockerfile: Dockerfile
     restart: on-failure
@@ -30,7 +30,7 @@ services:
     depends_on:
       - mongodb
       - backend
-    build: 
+    build:
       context: ./frontend
       dockerfile: Dockerfile
     restart: on-failure
@@ -39,7 +39,7 @@ services:
   backend:
     depends_on:
       - mongodb
-    build: 
+    build:
       context: ./backend
       dockerfile: Dockerfile
     environment:
