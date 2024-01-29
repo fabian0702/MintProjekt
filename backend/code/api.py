@@ -2,7 +2,6 @@
 from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel
 import jwt, yaml
-from datetime import datetime
 from scipy.interpolate import lagrange
 from os import environ
 from secrets import token_hex
@@ -88,7 +87,7 @@ def adjust_coeficients(location:str, timestamps:list[float], desiredResults:list
 def submit_result(result:Result):
     payload = jwt.decode(result.token, SECRET, algorithms=['HS256', ])
     location = payload['location']
-    deviceNumber = int(payload['deviceID'])
+    deviceNumber = int(payload['id'])
     if not location in results or not len(results[location])>=deviceNumber:
         raise HTTPException(status_code=404, detail='The specified device was not found')
     results[location][deviceNumber] = result.results
@@ -105,9 +104,9 @@ def list_devices():
 def get_location_info(location:str, count:int=5):
     if not location in results:
         raise HTTPException(status_code=404, detail='The specified device was not found')
-    result = db.getData(location, count+SMOOTHING_CONSTANT)
+    result = db.getData(location, int(count+SMOOTHING_NUMBER))
     correlationCoefficients = db.getLocation(location)['correlationCoefficients']
-    return [correlationFunction(resultsFilter(result[i:i+SMOOTHING_NUMBER]), correlationCoefficients) for i in range(count)]
+    return [correlationFunction(resultsFilter(result[i:int(i+SMOOTHING_NUMBER)]), correlationCoefficients) for i in range(count)]
 
 def correlationFunction(value:float, coefficients:list[float]=None) -> float:
     return sum([coefficient * value**i for i, coefficient in enumerate(coefficients)])

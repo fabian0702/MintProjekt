@@ -1,11 +1,17 @@
-from pymongo import MongoClient, DESCENDING
+from pymongo import MongoClient, DESCENDING, errors
 from os import environ
 from datetime import datetime
 
 PASSWORD = environ.get('MONGO_ROOT_PASSWORD', 'password')
 
-# Connection to MongoDB with authentication
-database = MongoClient('mongodb', 27017, username='root', password=PASSWORD)['mint']
+database = None
+
+while database is None:
+    try:
+        # Connection to MongoDB with authentication
+        database = MongoClient('mongodb', 27017, username='root', password=PASSWORD)['mint']
+    except errors.ServerSelectionTimeoutError:
+        pass
 
 def addData(location:str, data:int):
     return database['pastdata'].insert_one({'location':location, 'timestamp':int(datetime.now().timestamp()/60)*60, 'data':data})

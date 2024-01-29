@@ -34,9 +34,8 @@ services:
       context: ./frontend
       dockerfile: Dockerfile
     ports:
-      - 8083:80
+      - 9000:9000
     restart: on-failure
-    tty: true
     networks:
       - mint
   backend:

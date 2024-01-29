@@ -1,6 +1,6 @@
 from nicegui import ui
 from nicegui.events import ValueChangeEventArguments
-import requests, base64
+import requests
 from datetime import datetime
 from os import environ
 SERVER_URL = environ.get('SERVER_URL', None)
@@ -8,6 +8,14 @@ if SERVER_URL is None:
     print('Please set SERVER_URL to the url of the api')
     exit(1)
 
+connected = False
+while not connected:
+#    try:
+    requests.get(SERVER_URL)
+    connected = True
+#    except requests.exceptions.ConnectionError:
+#        pass
+#
 def getDevices():
     return requests.get(SERVER_URL+'/list_devices/').json()
 
